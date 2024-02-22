@@ -1,3 +1,16 @@
+# В даному коді використовуються наступні команди:
+
+# add [ім'я] [телефон]: Додати новий контакт з іменем та телефонним номером.
+# delete [ім'я] : Видалити контакт за іменем.
+# change [ім'я] [новий телефон]: Змінити телефонний номер для вказаного контакту.
+# phone [ім'я]: Показати телефонний номер для вказаного контакту.
+# all: Показати всі контакти в адресній книзі.
+# add-birthday [ім'я] [дата народження]: Додати дату народження для вказаного контакту.
+# show-birthday [ім'я]: Показати дату народження для вказаного контакту.
+# birthdays: Показати дні народження, які відбудуться протягом наступного тижня.
+# hello: Отримати вітання від бота.
+# close або exit: Закрити програму.
+
 import re
 import pickle
 from datetime import datetime, timedelta
@@ -63,6 +76,13 @@ class AddressBook:
     def remove_record(self, name):
         del self.data[name]
 
+    def delete_record(self, name):
+        if name in self.data:
+            del self.data[name]
+            print(f"Contact {name} deleted successfully.")
+        else:
+            print("Contact not found.")
+    
     def lookup_record(self, name):
         return self.data.get(name)
 
@@ -80,11 +100,11 @@ class AddressBook:
                     upcoming_birthdays.append(record)
         return upcoming_birthdays
 
-    def save_to_file(self, filename):
+    def save_to_file(self, filename="addressbook.pkl"):
         with open(filename, 'wb') as f:
             pickle.dump(self.data, f)
 
-    def load_from_file(self, filename):
+    def load_from_file(self, filename="addressbook.pkl"):
         try:
             with open(filename, 'rb') as f:
                 self.data = pickle.load(f)
@@ -118,6 +138,13 @@ class AddressBook:
                 self.data[name].edit_phone(self.data[name].phones[0].value, new_phone)
             else:
                 print("Contact not found.")
+        elif command_parts[0] == "delete":
+            if len(command_parts) != 2:
+                print("Invalid command format. Usage: delete [ім'я]")
+                return
+            name = command_parts[1]
+            self.delete_record(name)
+
         elif command_parts[0] == "phone":
             if len(command_parts) != 2:
                 print("Invalid command format. Usage: phone [ім'я]")
