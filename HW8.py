@@ -1,7 +1,7 @@
 # В даному коді використовуються наступні команди:
 
 # add [ім'я] [телефон]: Додати новий контакт з іменем та телефонним номером.
-# delete [ім'я] : Видалити контакт за іменем.
+# remove [ім'я] : Видалити контакт за іменем.
 # change [ім'я] [новий телефон]: Змінити телефонний номер для вказаного контакту.
 # phone [ім'я]: Показати телефонний номер для вказаного контакту.
 # all: Показати всі контакти в адресній книзі.
@@ -76,13 +76,12 @@ class AddressBook:
     def remove_record(self, name):
         del self.data[name]
 
-    def delete_record(self, name):
-        if name in self.data:
-            del self.data[name]
-            print(f"Contact {name} deleted successfully.")
-        else:
-            print("Contact not found.")
-    
+    def remove_record_by_name(self, name):
+        for record_name, record in self.data.items():
+            if record.name.value == name:
+                del self.data[record_name]
+                return
+
     def lookup_record(self, name):
         return self.data.get(name)
 
@@ -100,98 +99,101 @@ class AddressBook:
                     upcoming_birthdays.append(record)
         return upcoming_birthdays
 
-    def save_to_file(self, filename="addressbook.pkl"):
+    def save_to_file(self, filename):
         with open(filename, 'wb') as f:
             pickle.dump(self.data, f)
 
-    def load_from_file(self, filename="addressbook.pkl"):
+    def load_from_file(self, filename):
         try:
             with open(filename, 'rb') as f:
                 self.data = pickle.load(f)
         except FileNotFoundError:
             print("File not found. Creating new address book.")
 
-    def process_command(self, command):
-        command_parts = command.split()
-        if not command_parts:
-            print("Empty command.")
-            return
+def process_command(addressBook, command):
+    command_parts = command.split()
+    if not command_parts:
+        print("Empty command.")
+        return
     
-        if command_parts[0] == "add":
-            if len(command_parts) != 3:
-                print("Invalid command format. Usage: add [ім'я] [телефон]")
-                return
-            name = command_parts[1]
-            phone = command_parts[2]
-            try:
-                self.add_record(Record(name, phone))
-                print(f"Contact {name} with phone {phone} added successfully.")
-            except ValueError as e:
-                print(f"Error: {e}")
-        elif command_parts[0] == "change":
-            if len(command_parts) != 3:
-                print("Invalid command format. Usage: change [ім'я] [новий телефон]")
-                return
-            name = command_parts[1]
-            new_phone = command_parts[2]
-            if name in self.data:
-                self.data[name].edit_phone(self.data[name].phones[0].value, new_phone)
-            else:
-                print("Contact not found.")
-        elif command_parts[0] == "delete":
-            if len(command_parts) != 2:
-                print("Invalid command format. Usage: delete [ім'я]")
-                return
-            name = command_parts[1]
-            self.delete_record(name)
-
-        elif command_parts[0] == "phone":
-            if len(command_parts) != 2:
-                print("Invalid command format. Usage: phone [ім'я]")
-                return
-            name = command_parts[1]
-            if name in self.data:
-                print(self.data[name].phones[0])
-            else:
-                print("Contact not found.")
-        elif command_parts[0] == "all":
-            for record in self.data.values():
-                print(record)
-        elif command_parts[0] == "add-birthday":
-            if len(command_parts) != 3:
-                print("Invalid command format. Usage: add-birthday [ім'я] [дата народження]")
-                return
-            name = command_parts[1]
-            birthday = command_parts[2]
-            if name in self.data:
-                self.data[name].add_birthday(birthday)
-            else:
-                print("Contact not found.")
-        elif command_parts[0] == "show-birthday":
-            if len(command_parts) != 2:
-                print("Invalid command format. Usage: show-birthday [ім'я]")
-                return
-            name = command_parts[1]
-            if name in self.data and self.data[name].birthday:
-                print(self.data[name].birthday)
-            else:
-                print("Contact not found or no birthday set.")
-        elif command_parts[0] == "birthdays":
-            upcoming_birthdays = self.get_upcoming_birthdays()
-            if not upcoming_birthdays:
-                print("No upcoming birthdays.")
-            else:
-                print("Upcoming birthdays:")
-                for record in upcoming_birthdays:
-                    print(f"{record.name}: {record.birthday}")
-        elif command_parts[0] == "hello":
-            print("Hello!")
-        elif command_parts[0] == "close" or command_parts[0] == "exit":
-            self.save_to_file("address_book.pkl")
-            print("Address book saved. Goodbye!")
-            sys.exit()
+    if command_parts[0] == "add":
+        if len(command_parts) != 3:
+            print("Invalid command format. Usage: add [ім'я] [телефон]")
+            return
+        name = command_parts[1]
+        phone = command_parts[2]
+        try:
+            addressBook.add_record(Record(name, phone))
+            print(f"Contact {name} with phone {phone} added successfully.")
+        except ValueError as e:
+            print(f"Error: {e}")
+    elif command_parts[0] == "change":
+        if len(command_parts) != 3:
+            print("Invalid command format. Usage: change [ім'я] [новий телефон]")
+            return
+        name = command_parts[1]
+        new_phone = command_parts[2]
+        if name in addressBook.data:
+            addressBook.data[name].edit_phone(addressBook.data[name].phones[0].value, new_phone)
         else:
-            print("Invalid command.")
+            print("Contact not found.")
+    elif command_parts[0] == "phone":
+        if len(command_parts) != 2:
+            print("Invalid command format. Usage: phone [ім'я]")
+            return
+        name = command_parts[1]
+        if name in addressBook.data:
+            print(addressBook.data[name].phones[0])
+        else:
+            print("Contact not found.")
+    elif command_parts[0] == "all":
+        for record in addressBook.data.values():
+            print(record)
+    elif command_parts[0] == "add-birthday":
+        if len(command_parts) != 3:
+            print("Invalid command format. Usage: add-birthday [ім'я] [дата народження]")
+            return
+        name = command_parts[1]
+        birthday = command_parts[2]
+        if name in addressBook.data:
+            addressBook.data[name].add_birthday(birthday)
+        else:
+            print("Contact not found.")
+    elif command_parts[0] == "show-birthday":
+        if len(command_parts) != 2:
+            print("Invalid command format. Usage: show-birthday [ім'я]")
+            return
+        name = command_parts[1]
+        if name in addressBook.data and addressBook.data[name].birthday:
+            print(addressBook.data[name].birthday)
+        else:
+            print("Contact not found or no birthday set.")
+    elif command_parts[0] == "birthdays":
+        upcoming_birthdays = addressBook.get_upcoming_birthdays()
+        if not upcoming_birthdays:
+            print("No upcoming birthdays.")
+        else:
+            print("Upcoming birthdays:")
+            for record in upcoming_birthdays:
+                print(f"{record.name}: {record.birthday}")
+    elif command_parts[0] == "hello":
+        print("Hello!")
+    elif command_parts[0] == "remove":
+        if len(command_parts) != 2:
+            print("Invalid command format. Usage: remove [ім'я]")
+            return
+        name = command_parts[1]
+        if name in addressBook.data:
+            addressBook.remove_record_by_name(name)
+            print(f"Contact {name} removed successfully.")
+        else:
+            print("Contact not found.")
+    elif command_parts[0] == "close" or command_parts[0] == "exit":
+        addressBook.save_to_file("address_book.pkl")
+        print("Address book saved. Goodbye!")
+        sys.exit()
+    else:
+        print("Invalid command.")
 
 def main():
     book = AddressBook()
@@ -199,7 +201,7 @@ def main():
     print("Welcome to the assistant bot!")
     while True:
         user_input = input("Enter a command: ")
-        book.process_command(user_input)
+        process_command(book, user_input)
 
 if __name__ == "__main__":
     main()
